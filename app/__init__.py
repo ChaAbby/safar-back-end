@@ -16,7 +16,7 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
 
     from app.models.itinerary import Itinerary
-    from app.models.locations import Locations
+    from app.models.places import Places
     from app.models.tags import Tags
 
     return app
