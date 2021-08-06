@@ -18,14 +18,14 @@ def get_single_place(place_id):
     # This portion is the GET request for only one place
     elif request.method == "GET":
         return {"place": place.to_json()}, 200
-    elif request.method == "PUT":
-        # This portion is the PUT request for only one place
-        request_body = request.get_json()
-        place.name = request_body["name"]
-        place.lat = request_body["lat"]
-        place.lng = request_body["lng"]
-        db.session.commit()
-        return {"place": place.to_json()}, 200
+    # elif request.method == "PUT":
+    #     # This portion is the PUT request for only one place
+    #     request_body = request.get_json()
+    #     place.name = request_body["name"]
+    #     place.lat = request_body["lat"]
+    #     place.lng = request_body["lng"]
+    #     db.session.commit()
+    #     return {"place": place.to_json()}, 200
     elif request.method == "DELETE":
         db.session.delete(place)
         db.session.commit()
@@ -41,13 +41,12 @@ def places_index():
         places_response.append(place.to_json())
     return jsonify(places_response), 200
 
-
 @places_bp.route("", methods=["POST"])
 # Creates new places in the database
 def places():
     try:
         request_body = request.get_json()
-        new_place = Places(place_id=request_body["place_id"],
+        new_place = Places(
                         lat=request_body["lat"],
                         lng=request_body["lng"],
                         name=request_body["name"])
@@ -59,7 +58,7 @@ def places():
         return {
             "details": "Invalid data"}, 400
 
-# ==================== Tasks ==============================
+# ==================== Tags ==============================
 
 from app import db
 from app.models.tags import Tags
@@ -68,7 +67,7 @@ from flask import request, Blueprint, make_response, jsonify
 
 tags_bp = Blueprint("tags", __name__, url_prefix="/tags")
 
-@places_bp.route("/<tag_id>", methods=["GET","PUT", "DELETE"])
+@tags_bp.route("/<tag_id>", methods=["GET", "DELETE"])
 def get_single_tag(tag_id):
 
     tag = Tags.query.get(tag_id)
@@ -77,13 +76,13 @@ def get_single_tag(tag_id):
         return jsonify(None), 404
     # This portion is the GET request for only one tag
     elif request.method == "GET":
-        return {"tag": tag.to_json()}, 200
-    elif request.method == "PUT":
-        # This portion is the PUT request for only one tag
-        request_body = request.get_json()
-        tag.type = request_body["type"]
-        db.session.commit()
-        return {"tag": tag.to_json()}, 200
+        return {"tag": tag.to_json_tags()}, 200
+    # elif request.method == "PUT":
+    #     # This portion is the PUT request for only one tag
+    #     request_body = request.get_json()
+    #     tag.type = request_body["type"]
+    #     db.session.commit()
+        # return {"tag": tag.to_json_tags()}, 200
     elif request.method == "DELETE":
         db.session.delete(tag)
         db.session.commit()
@@ -96,7 +95,7 @@ def tags_index():
     tags = Tags.query.all()
     tags_response = []
     for tag in tags:
-        tags_response.append(tag.to_json())
+        tags_response.append(tag.to_json_tags())
     return jsonify(tags_response), 200
 
 
@@ -105,12 +104,20 @@ def tags_index():
 def tags():
     try:
         request_body = request.get_json()
-        new_tag = Tags(place_id=request_body["tag_id"],
-                        lat=request_body["type"])
+        string_type = ""
+        count = 0
+        for type in request_body["type"]:
+            count += 1
+            if count == 1:
+                string_type += f'{type}'
+            else:
+                string_type += f' {type}'
+        new_tag = Tags(
+                        type= string_type)
         db.session.add(new_tag)
         db.session.commit()
 
-        return {"tag": new_tag.to_json()}, 201
+        return {"tag": new_tag.to_json_tags()}, 201
     except KeyError:
         return {
             "details": "Invalid data"}, 400
@@ -124,7 +131,7 @@ from flask import request, Blueprint, make_response, jsonify
 
 itinerary_bp = Blueprint("itinerary", __name__, url_prefix="/itinerary")
 
-@itinerary_bp.route("/<itinerary_id>", methods=["GET","PUT", "DELETE"])
+@itinerary_bp.route("/<itinerary_id>", methods=["GET", "DELETE"])
 def get_single_itinerary(itinerary_id):
 
     itinerary = Itinerary.query.get(itinerary_id)
@@ -133,14 +140,13 @@ def get_single_itinerary(itinerary_id):
         return jsonify(None), 404
     # This portion is the GET request for only one itinerary
     elif request.method == "GET":
-        return {"itinerary": itinerary.to_json()}, 200
-    elif request.method == "PUT":
-        # This portion is the PUT request for only one itinerary
-        request_body = request.get_json()
-        itinerary.itinerary_name = request_body["itinerary_name"]
-        itinerary.location = request_body["location"]
-        db.session.commit()
-        return {"itinerary": itinerary.to_json()}, 200
+        return {"itinerary": itinerary.to_json_itin()}, 200
+    # elif request.method == "PUT":
+    #     # This portion is the PUT request for only one itinerary
+    #     request_body = request.get_json()
+    #     itinerary.itinerary_name = request_body["itinerary_name"]
+    #     db.session.commit()
+    # return {"itinerary": itinerary.to_json_itin()}, 200
     elif request.method == "DELETE":
         db.session.delete(itinerary)
         db.session.commit()
@@ -148,12 +154,12 @@ def get_single_itinerary(itinerary_id):
             "details": f"Itinerary {itinerary.itinerary_id} \"{itinerary.itinerary_name}\" successfully deleted"
             }, 200
 
-@places_bp.route("", methods=["GET"])
-def places_index():
+@itinerary_bp.route("", methods=["GET"])
+def itinerary_index():
     itinerary = Itinerary.query.all()
     itinerary_response = []
     for single_itinerary in itinerary:
-        itinerary_response.append(single_itinerary.to_json())
+        itinerary_response.append(single_itinerary.to_json_itin())
     return jsonify(itinerary_response), 200
 
 
@@ -162,14 +168,12 @@ def places_index():
 def itinerary():
     try:
         request_body = request.get_json()
-        new_itinerary = Itinerary(itinerary_id=request_body["itinerary_id"],
-                        itinerary_name=request_body["itinerary_name"],
-                        lng=request_body["lng"],
-                        location=request_body["location"])
+        new_itinerary = Itinerary(
+                        itinerary_name=request_body["itinerary_name"])
         db.session.add(new_itinerary)
         db.session.commit()
 
-        return {"itinerary": new_itinerary.to_json()}, 201
+        return {"itinerary": new_itinerary.to_json_itin()}, 201
     except KeyError:
         return {
             "details": "Invalid data"}, 400

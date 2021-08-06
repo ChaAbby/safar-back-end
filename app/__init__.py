@@ -19,4 +19,13 @@ def create_app(test_config=None):
     from app.models.places import Places
     from app.models.tags import Tags
 
+    from .routes import places_bp
+    app.register_blueprint(places_bp)
+
+    from .routes import tags_bp
+    app.register_blueprint(tags_bp)
+
+    from .routes import itinerary_bp
+    app.register_blueprint(itinerary_bp)
+
     return app

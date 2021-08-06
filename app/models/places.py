@@ -7,3 +7,11 @@ class Places(db.Model):
     lng = db.Column(db.Integer)
     name = db.Column(db.String)
     tag_id = db.Column(db.Integer, db.ForeignKey('tags.tag_id'), nullable = True)
+
+    def to_json(self):
+        return {
+                "place_id": self.place_id,
+                "lat": self.lat,
+                "name": self.name,
+                "tag_id": self.tag_id,
+            }
