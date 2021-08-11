@@ -5,6 +5,7 @@ from werkzeug.datastructures import Authorization
 from datetime import datetime
 import os
 import requests
+from decimal import Decimal
 
 places_bp = Blueprint("places", __name__, url_prefix="/places")
 
@@ -15,17 +16,8 @@ def get_single_place(place_id):
     # With the GET, POST and DELETE request if there is nothing we output this
     if request == None or place == None:
         return jsonify(None), 404
-    # This portion is the GET request for only one place
     elif request.method == "GET":
         return {"place": place.to_json()}, 200
-    # elif request.method == "PUT":
-    #     # This portion is the PUT request for only one place
-    #     request_body = request.get_json()
-    #     place.name = request_body["name"]
-    #     place.lat = request_body["lat"]
-    #     place.lng = request_body["lng"]
-    #     db.session.commit()
-    #     return {"place": place.to_json()}, 200
     elif request.method == "DELETE":
         db.session.delete(place)
         db.session.commit()
@@ -44,11 +36,13 @@ def places_index():
 @places_bp.route("", methods=["POST"])
 # Creates new places in the database
 def places():
+
     try:
         request_body = request.get_json()
         new_place = Places(
                         lat=request_body["lat"],
                         lng=request_body["lng"],
+                        total=request_body["lat"] + request_body["lng"],
                         name=request_body["name"])
         db.session.add(new_place)
         db.session.commit()
@@ -97,6 +91,8 @@ def tags_index():
     for tag in tags:
         tags_response.append(tag.to_json_tags())
     return jsonify(tags_response), 200
+
+
 
 
 @tags_bp.route("", methods=["POST"])
@@ -177,3 +173,66 @@ def itinerary():
     except KeyError:
         return {
             "details": "Invalid data"}, 400
+
+# ====
+@itinerary_bp.route("<itinerary_id>/places", methods=["POST"])
+def post_places_ids_to_itineary(itinerary_id):
+    itinerary = Itinerary.query.get(itinerary_id)
+    request_body = request.get_json()
+
+    # origin_total = -74.68747
+
+    # places_list = []
+    # for place_id in request_body["place_ids"]:
+    #     place = Places.query.get(place_id)
+    #     places_list.append(place.total)
+    
+    # places_list.sort(key=lambda x: abs(origin_total-x))
+
+    # final_ds = []
+    # for total in places_list:
+    #     for place_id in request_body["place_ids"]:
+    #         place = Places.query.get(place_id)
+    #         if total == place.total:
+    #             final_ds.append(place)
+
+    # for location in final_ds:
+    #     place = Places.query.get(location["place_id"])
+    #     itinerary.places.append(place)
+    #     place.itinerary_id = itinerary_id
+    # db.session.commit()
+
+
+
+    
+    for place_id in request_body["place_ids"]:
+        place = Places.query.get(place_id)
+        itinerary.places.append(place)
+        place.itinerary_id = itinerary_id
+    db.session.commit()
+    return make_response({"id": itinerary.itinerary_id, "place_ids": request_body["place_ids"]}, 200)
+
+@itinerary_bp.route("<itinerary_id>/places", methods=["GET"])
+def getting_places_of_one_itinerary(itinerary_id):
+    itinerary = Itinerary.query.get(itinerary_id)
+    if itinerary == None:
+        return jsonify(None), 404
+    else:
+        places_from_itinerary = itinerary.places
+
+        places_response = []
+        for place in places_from_itinerary:
+            places_response.append(place.to_json())
+            # def distance(place):
+            #     return math.sqrt((place.lat-origin.lat)**2+(place.lon-origin.lon)**2 )
+            # sorted_places = sort(itinerary.places, key=lambda distance() )
+
+        return {"itinerary_id":itinerary.itinerary_id,"itinerary_name": itinerary.itinerary_name, "places": places_response}, 200
+
+        # 2 route
+            # attach itin id - save places array
+            # Sort places array by distance function
+        # math.sqrt((place.lat-origin.lat)**2+(place.lon-origin.lon)**2 )
+            # for place in places:
+                # if place.origin == True:
+
