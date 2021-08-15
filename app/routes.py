@@ -43,7 +43,8 @@ def places():
                         lat=request_body["lat"],
                         lng=request_body["lng"],
                         total=request_body["lat"] + request_body["lng"],
-                        name=request_body["name"])
+                        name=request_body["name"],
+                        google_place_id = request_body["google_place_id"])
         db.session.add(new_place)
         db.session.commit()
 
