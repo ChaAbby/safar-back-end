@@ -3,7 +3,7 @@ from app import db
 
 class Itinerary(db.Model):
     itinerary_id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    itinerary_name = db.Column(db.String)
+    itinerary_name = db.Column(db.String, unique = True, nullable=False)
     places = db.relationship('Places', backref='itinerary', lazy=True, order_by = "Places.total")
 
     def to_json_itin(self):
