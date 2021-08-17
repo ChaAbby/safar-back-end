@@ -236,4 +236,21 @@ def getting_places_of_one_itinerary(itinerary_id):
         # math.sqrt((place.lat-origin.lat)**2+(place.lon-origin.lon)**2 )
             # for place in places:
                 # if place.origin == True:
+@itinerary_bp.route("itinerary_with_places", methods=["POST"])
+def itinerary_with_places():
+    try:
+        request_body = request.get_json()
+        print("****************", request_body)
+        new_itinerary = Itinerary(
+                        itinerary_name=request_body["itinerary_name"])
+        for place_id in request_body["place_ids"]:
+            place = Places.query.get(place_id)
+            new_itinerary.places.append(place)
+            place.itinerary_id = new_itinerary.itinerary_id
+        db.session.add(new_itinerary)
+        db.session.commit()
+        return {"itinerary": new_itinerary.to_json_itin()}, 201
+    except KeyError as error:
+        return {
+            "details":f"Invalid data. Missing key {error}"}, 400
 
